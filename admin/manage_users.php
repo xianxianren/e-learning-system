@@ -159,7 +159,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 // -------------------------------------------------------------------------
 $users_list = [];
 try {
-    $stmt = $pdo->query("SELECT user_id, username, role, full_name, class_section, avatar_url FROM users ORDER BY role DESC, full_name ASC");
+    $stmt = $pdo->query("SELECT user_id, username, role, full_name, class_section, avatar_url FROM users WHERE username NOT LIKE 'class_placeholder_%' ORDER BY role DESC, full_name ASC");
     $users_list = $stmt->fetchAll();
 } catch (PDOException $e) {
     $alert_danger = "Failed to connect and read user catalog records.";

@@ -117,6 +117,24 @@ $isAlreadyCompleted = ($current_status === 'completed');
             transform: none !important;
             pointer-events: none; /* prevents hover/active animations */
         }
+        .teacher-notes-box {
+            background-color: white;
+            border-radius: var(--radius-large);
+            border: 3px solid #e2ebf5;
+            padding: 20px;
+            box-shadow: var(--shadow-main);
+            margin-top: 15px;
+            margin-bottom: 25px;
+        }
+        .teacher-notes-box h3 {
+            margin-bottom: 8px; 
+            color: var(--color-purple);
+        }
+        .teacher-notes-box p {
+            line-height: 1.5; 
+            font-size: 1rem; 
+            color: #475a6e;
+        }
     </style>
 </head>
 <body>
@@ -164,12 +182,12 @@ $isAlreadyCompleted = ($current_status === 'completed');
             <?php endif; ?>
 
             <!-- Educational text material -->
-            <div class="lesson-content">
-                <h3 style="margin-bottom: 8px; color: var(--color-purple);">Teacher's Notes 📝</h3>
-                <p style="line-height: 1.5; font-size: 1rem; color: #475a6e;">
-                    Welcome! Watch the video above to learn, or tap the button below to take the fun quiz challenge and earn Gold Stars!
-                </p>
-            </div>
+            <?php if (!empty($lesson['teacher_notes'])): ?>
+                <div class="teacher-notes-box">
+                    <h3>Teacher's Notes 📝</h3>
+                    <p><?php echo nl2br(htmlspecialchars($lesson['teacher_notes'])); ?></p>
+                </div>
+            <?php endif; ?>
 
             <!-- Action Quiz Button (Always unlocked) -->
             <input type="hidden" id="lesson_id" value="<?php echo $lesson_id; ?>">

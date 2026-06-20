@@ -50,6 +50,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $alert_danger = "Invalid Subject ID.";
         } else {
             try {
+                // Query all lessons belonging to this subject to delete physical files first
+                $stmt_files = $pdo->prepare("SELECT video_url, worksheet_url FROM lessons WHERE subject_id = ?");
+                $stmt_files->execute([$subject_id]);
+                $lessons_files = $stmt_files->fetchAll();
+
+                foreach ($lessons_files as $lesson_files) {
+                    $video_url = $lesson_files['video_url'];
+                    $worksheet_url = $lesson_files['worksheet_url'];
+
+                    if ($video_url) {
+                        $video_path = __DIR__ . '/../' . $video_url;
+                        if (file_exists($video_path) && is_file($video_path)) {
+                            unlink($video_path);
+                        }
+                    }
+                    if ($worksheet_url) {
+                        $worksheet_path = __DIR__ . '/../' . $worksheet_url;
+                        if (file_exists($worksheet_path) && is_file($worksheet_path)) {
+                            unlink($worksheet_path);
+                        }
+                    }
+                }
+
                 // Delete subject (cascades and drops all children lessons, quizzes, progress, etc.)
                 $stmt = $pdo->prepare("DELETE FROM subjects WHERE subject_id = ?");
                 $stmt->execute([$subject_id]);

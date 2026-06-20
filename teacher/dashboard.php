@@ -20,7 +20,7 @@ $average_score = 0;
 
 try {
     // Total Students Roster count
-    $total_students = $pdo->query("SELECT COUNT(*) FROM users WHERE role = 'student'")->fetchColumn();
+    $total_students = $pdo->query("SELECT COUNT(*) FROM users WHERE role = 'student' AND username NOT LIKE 'class_placeholder_%'")->fetchColumn();
     
     // Lessons completed but quiz not yet taken
     $pending_query = "

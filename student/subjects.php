@@ -73,7 +73,8 @@ try {
             'icon' => $subj['icon_url'] ?: 'math-icon',
             'percentage' => $percentage,
             'theme_color' => $theme_color,
-            'fill_color' => $fill_color
+            'fill_color' => $fill_color,
+            'total_lessons' => $total_lessons
         ];
     }
 } catch (PDOException $e) {
@@ -146,7 +147,11 @@ try {
             <div class="subjects-grid">
                 <?php foreach ($subjects_list as $subject): ?>
                     <!-- Card triggers navigation to lessons list -->
-                    <div class="subject-card" onclick="window.location.href='course.php?subject_id=<?php echo $subject['id']; ?>'" style="border-color: <?php echo $subject['theme_color']; ?>; border-width: 4px;">
+                    <div class="subject-card" <?php if ($subject['total_lessons'] > 0): ?>onclick="window.location.href='course.php?subject_id=<?php echo $subject['id']; ?>'"<?php endif; ?> style="border-color: <?php echo $subject['theme_color']; ?>; border-width: 4px; position: relative; <?php if ($subject['total_lessons'] == 0) echo 'opacity: 0.8; cursor: default;'; ?>">
+                        
+                        <?php if ($subject['total_lessons'] == 0): ?>
+                            <span class="coming-soon-badge" style="position: absolute; top: 10px; right: 10px; background-color: var(--color-purple); color: white; padding: 4px 10px; border-radius: 9999px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Coming Soon!</span>
+                        <?php endif; ?>
                         
                         <!-- Friendly Icons based on configuration name -->
                         <?php 

@@ -130,7 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Fetch students list for avatar scroll bar
 try {
-    $students_stmt = $pdo->prepare("SELECT user_id, full_name, avatar_url FROM users WHERE role = 'student' ORDER BY full_name ASC");
+    $students_stmt = $pdo->prepare("SELECT user_id, full_name, avatar_url FROM users WHERE role = 'student' AND username NOT LIKE 'class_placeholder_%' ORDER BY full_name ASC");
     $students_stmt->execute();
     $students = $students_stmt->fetchAll();
 } catch (PDOException $e) {
@@ -217,13 +217,45 @@ try {
             margin: 10px auto 0 auto;
         }
         
-        .avatar-selector, .avatar-grid {
+        .avatar-selector {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
             gap: 15px;
             width: 100%;
             margin-bottom: 10px;
+        }
+        
+        #avatarGrid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            justify-items: center;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        
+        .avatar-card.avatar-btn {
+            width: 75px;
+            height: 90px;
+            padding: 5px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            flex: unset;
+        }
+        
+        .avatar-card.avatar-btn span {
+            width: 100%;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 0.8rem;
+            margin-top: 2px;
         }
         
         .btn-page {
@@ -286,9 +318,9 @@ try {
                     </div>
                     
                     <!-- Pagination controls -->
-                    <div id="avatarPagination" style="display: flex; justify-content: center; gap: 20px; align-items: center; margin-top: 15px;">
-                        <button id="prevAvatarBtn" class="btn-page" style="display: none;">⬅️ Back</button>
-                        <button id="nextAvatarBtn" class="btn-page" style="display: none;">Next ➡️</button>
+                    <div id="avatarPagination" style="display: flex; justify-content: space-between; width: 100%; max-width: 350px; margin: 10px auto;">
+                        <button id="prevAvatarBtn" class="btn-page" style="visibility: hidden;">&lt; Back</button>
+                        <button id="nextAvatarBtn" class="btn-page" style="visibility: hidden;">Next &gt;</button>
                     </div>
                     
                     <form id="student_login_form" method="POST" action="login.php">
@@ -395,21 +427,21 @@ try {
                 
                 // Button visibility logic
                 if (currentPage === 1) {
-                    prevBtn.style.display = 'none';
+                    prevBtn.style.visibility = 'hidden';
                 } else {
-                    prevBtn.style.display = 'inline-block';
+                    prevBtn.style.visibility = 'visible';
                 }
                 
                 if (currentPage === totalPages || totalPages === 0) {
-                    nextBtn.style.display = 'none';
+                    nextBtn.style.visibility = 'hidden';
                 } else {
-                    nextBtn.style.display = 'inline-block';
+                    nextBtn.style.visibility = 'visible';
                 }
                 
                 if (totalPages <= 1) {
-                    paginationContainer.style.display = 'none';
+                    paginationContainer.style.visibility = 'hidden';
                 } else {
-                    paginationContainer.style.display = 'flex';
+                    paginationContainer.style.visibility = 'visible';
                 }
             }
             

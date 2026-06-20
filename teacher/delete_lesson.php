@@ -14,15 +14,26 @@ $lesson_id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 
 if ($lesson_id) {
     try {
-        // Retrieve the old video_url
-        $stmt = $pdo->prepare("SELECT video_url FROM lessons WHERE lesson_id = ?");
+        // Retrieve the old video_url and worksheet_url
+        $stmt = $pdo->prepare("SELECT video_url, worksheet_url FROM lessons WHERE lesson_id = ?");
         $stmt->execute([$lesson_id]);
-        $video_url = $stmt->fetchColumn();
+        $lesson_files = $stmt->fetch();
 
-        if ($video_url) {
-            $video_path = __DIR__ . '/../' . $video_url;
-            if (file_exists($video_path) && is_file($video_path)) {
-                unlink($video_path);
+        if ($lesson_files) {
+            $video_url = $lesson_files['video_url'];
+            $worksheet_url = $lesson_files['worksheet_url'];
+
+            if ($video_url) {
+                $video_path = __DIR__ . '/../' . $video_url;
+                if (file_exists($video_path) && is_file($video_path)) {
+                    unlink($video_path);
+                }
+            }
+            if ($worksheet_url) {
+                $worksheet_path = __DIR__ . '/../' . $worksheet_url;
+                if (file_exists($worksheet_path) && is_file($worksheet_path)) {
+                    unlink($worksheet_path);
+                }
             }
         }
 

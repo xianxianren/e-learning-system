@@ -11,6 +11,18 @@ require_once __DIR__ . '/../includes/auth.php';
 // Verify admin permissions
 require_role('admin');
 
+// Robust PHP function to calculate the total size of a directory in bytes
+function getFolderSize($dir) {
+    $size = 0;
+    $files = glob(rtrim($dir, '/').'/*', GLOB_NOSORT);
+    if ($files !== false) {
+        foreach ($files as $each) {
+            $size += is_file($each) ? filesize($each) : getFolderSize($each);
+        }
+    }
+    return $size;
+}
+
 $admin_name = $_SESSION['full_name'];
 
 // 1. Fetch system health metrics
@@ -20,7 +32,7 @@ $total_subjects = 0;
 $total_points_awarded = 0;
 
 try {
-    $total_students = $pdo->query("SELECT COUNT(*) FROM users WHERE role = 'student'")->fetchColumn();
+    $total_students = $pdo->query("SELECT COUNT(*) FROM users WHERE role = 'student' AND username NOT LIKE 'class_placeholder_%'")->fetchColumn();
     $total_teachers = $pdo->query("SELECT COUNT(*) FROM users WHERE role = 'teacher'")->fetchColumn();
     $total_subjects = $pdo->query("SELECT COUNT(*) FROM subjects")->fetchColumn();
     $total_points_awarded = $pdo->query("SELECT COALESCE(SUM(total_points), 0) FROM gamification_stats")->fetchColumn();
@@ -28,25 +40,20 @@ try {
     $db_error = "Error querying platform metrics: " . $e->getMessage();
 }
 
-// 2. Calculate Server Storage Used in assets/uploads/
-$storage_used_mb = 0;
-$storage_limit_mb = 100; // Limit for visual presentation
-$storage_percentage = 12; // Default mock fallback
+// 2. Calculate Server Storage Used
+$max_storage_mb = 500; // Increased to 500MB
+$uploads_size = getFolderSize('../assets/uploads/');
+$videos_size = getFolderSize('../assets/videos/');
+$total_used_bytes = $uploads_size + $videos_size;
 
-$upload_dir = __DIR__ . '/../assets/uploads/';
-if (is_dir($upload_dir)) {
-    $files = scandir($upload_dir);
-    $total_bytes = 0;
-    foreach ($files as $file) {
-        if ($file !== '.' && $file !== '..') {
-            $total_bytes += filesize($upload_dir . $file);
-        }
-    }
-    $storage_used_mb = round($total_bytes / (1024 * 1024), 2);
-    if ($storage_used_mb > 0) {
-        $storage_percentage = min(round(($storage_used_mb / $storage_limit_mb) * 100), 100);
-    }
-}
+// Convert bytes to Megabytes (MB)
+$used_mb = round($total_used_bytes / 1048576, 2); 
+
+// Calculate accurate percentage
+$percentage = ($used_mb > 0) ? round(($used_mb / $max_storage_mb) * 100, 1) : 0;
+
+// Cap percentage at 100% for the UI progress bar
+$progress_width = min(100, $percentage);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -124,12 +131,10 @@ if (is_dir($upload_dir)) {
 
             <!-- Server Storage alert widget -->
             <div class="storage-alert-card">
-                <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 0.9rem;">
-                    <span>💾 Worksheet & Video Upload Directory Storage</span>
-                    <span><?php echo $storage_used_mb; ?> MB / <?php echo $storage_limit_mb; ?> MB (<?php echo $storage_percentage; ?>%)</span>
-                </div>
+                <p>💾 Worksheet & Video Upload Directory Storage</p>
+                <h3><?php echo $used_mb; ?> MB / <?php echo $max_storage_mb; ?> MB (<?php echo $percentage; ?>%)</h3>
                 <div class="storage-progress-container">
-                    <div class="storage-progress-fill" style="width: <?php echo $storage_percentage; ?>%;"></div>
+                    <div class="storage-progress-fill progress-bar-fill" style="width: <?php echo $progress_width; ?>%;"></div>
                 </div>
                 <p style="font-size: 0.75rem; color: var(--color-slate-600); margin-top: 8px;">
                     Tracks physical worksheets uploaded under <code>/assets/uploads/</code> by class teachers.

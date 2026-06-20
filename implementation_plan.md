@@ -1,197 +1,199 @@
 # Interactive E-Learning System Implementation Plan
 
-This document details the architecture, file layout, database design, and feature set for the Interactive E-Learning System for Primary School Students. 
+This document details the final architecture, folder layout, normalized database design, and verification plan for the Interactive E-Learning System for Primary School Students.
 
-## User Review Required
+---
 
-> [!IMPORTANT]
-> - **Authentication Flow**: Students will log in using a 4-digit PIN. Teachers and Admins will log in using standard email and password credentials.
-> - **Sound Effects**: To remain strictly original and avoid external files, sound effects (success chime, error buzzer) will be dynamically synthesized on the client-side using the HTML5 Web Audio API.
-> - **Visual Style Separation**: 
->   - Students: Bright colors, rounded cards, large tap-friendly buttons, mobile-first layouts.
->   - Staff (Teachers/Admins): Professional, data-driven grids, clean toolbars, and dashboards.
+## 1. Core Architectural Strategy
 
-## Project Structure Plan
+* **Authentication Flow**: Students authenticate via a mobile-friendly 4-digit PIN selector pad. Teachers and Administrators authenticate using standard school email and password credentials. All login entry points reside in the project root to prevent relative directory routing errors and simplify session redirection.
+* **Sound Effects**: To eliminate external media asset dependencies, all game sound effects (success chimes, error buzzers) are dynamically synthesized client-side via the browser's Web Audio API using pure `AudioContext` oscillator nodes.
+* **Visual Styling Separation**:
+  * **Students**: Bubbly primary-colored themes, giant touch targets, mobile-first viewports (`max-width: 480px`), and high-contrast circular progress rings.
+  * **Staff (Teachers/Admins)**: Clean, desktop-first data-dense grids, metrics cards, table layouts, and management control panels.
 
-The following structure is planned for the `c:\xampp\htdocs\e-learning system` workspace:
+---
+
+## 2. Implemented Project Structure
+
+The final implemented folder structure in the `c:\xampp\htdocs\e-learning system` workspace:
 
 ```
 e-learning system/
-├── assets/                    # Project assets containing stylesheets, scripts, audio, and user uploads
-│   ├── css/                  # Styling files separated by role/style needs
-│   │   ├── student.css       # Colorful, bubbly, mobile-first design for students
-│   │   └── dashboard.css     # Professional, clean layout for teacher and admin web dashboards
-│   ├── js/                   # Front-end JavaScript logic files
-│   │   ├── audio.js          # Web Audio API script for synthesizing gamification success/error sound effects
-│   │   ├── student.js        # Handles student quiz validation, drag-and-drop matching, and custom HTML5 video controls
-│   │   └── dashboard.js      # Handles staff table search/filtering and dynamic DOM actions
-│   ├── audio/                # Directory for gamification audio files (fallback if any)
-│   ├── videos/               # Storage directory for educational course video content
-│   └── uploads/              # Storage directory for student homework file uploads
-├── config/                   # Configuration files for database and system-wide constants
-│   └── db.php                # PDO-based MySQL database connection setup
-├── includes/                 # Shared PHP backend helper scripts and components
-│   ├── auth.php              # Handles user login status, role checks, and session security
-│   ├── header.php            # Shared navbar/header that changes theme based on the user's role
-│   └── footer.php            # Shared footer layout with copyright and system information
-├── auth/                     # Authentication pages for login and logout
-│   ├── login.php             # Unified login handler (PIN dialer for students, Email/Password form for staff)
-│   └── logout.php            # Destroys current session and redirects to homepage
-├── student/                  # Student-facing views (mobile-first UI)
-│   ├── dashboard.php         # Student hub showing XP bar, daily streaks, badges, and assigned lessons
-│   ├── course.php            # Visual subject list (Math, Science) with To-Do and Completed category filters
-│   ├── lesson.php            # Interactive lesson viewer with a custom video player and homework submission form
-│   └── quiz.php              # Playful quiz taker with interactive questions and real-time audio feedback
-├── teacher/                  # Teacher-facing views (web dashboard UI)
-│   ├── dashboard.php         # Teacher home displaying class progress analytics and pending homework notifications
-│   ├── search.php            # Dynamic endpoint for AJAX-based student list searches
-│   ├── curriculum.php        # Interface to create/edit subjects and add lessons to classes
-│   ├── quizzes.php           # Visual builder to create interactive quizzes stored in JSON format
-│   └── grade.php             # Secure interface to download student homework and assign grades or bonus points
-├── admin/                    # Admin-facing views (web dashboard UI)
-│   ├── dashboard.php         # System summary including active users counts and basic server metrics
-│   ├── users.php             # Management console for creating, editing, and deleting student/teacher profiles
-│   ├── curriculum.php        # Interface to manage and approve subjects in the master course list
-│   └── storage.php           # Displays server storage allocation and media file usage logs
-├── database.sql              # MySQL database schema definition file for quick import
-├── index.php                 # Core entry point redirecting users to login or their respective dashboard
+├── admin/                     # Admin-facing viewports & system diagnostics
+│   ├── dashboard.php          # Main administrative panel displaying storage metrics
+│   ├── manage_curriculum.php  # CRUD editor for subjects
+│   ├── manage_users.php       # Master portal to manage student and teacher accounts
+│   └── system_reports.php     # System-wide reporting and active table diagnostics
+├── admin_login.php            # Secure admin authentication page
+├── assets/                    # Project asset storage directories
+│   ├── css/                   # Stylesheets
+│   │   ├── admin.css          # Styling rules for administrative views
+│   │   ├── dashboard.css      # Styling rules for teacher portal views
+│   │   └── student.css        # Colorful bubble styles for student views
+│   ├── js/                    # Client-side scripts
+│   │   ├── audio.js           # Web Audio API Synthesizer (oscillator sound generator)
+│   │   ├── quiz_engine.js     # Unified student quiz game engine (5 question layouts)
+│   │   └── student.js         # Student UI interactions, PIN keypad, and video player
+│   ├── videos/                # Storage directory for local video uploads (.mp4)
+│   └── images/
+│       └── icons/             # Custom subject thumbnails and UI decoration icons
+├── auth/                      # Session management utilities
+│   └── logout.php             # Session destuction handler
+├── config/                    # Configuration settings
+│   └── db.php                 # Centralized PDO MySQL connection wrapper
+├── database.sql               # Unified database schema and master seed definitions
+├── implementation_plan.md     # Project PM guide and architecture plan
+├── import_db.php              # Automated SQL importing utility
+├── includes/                  # Common components and helpers
+│   └── auth.php               # User authentication check hooks
+├── index.php                  # Primary entry point router
+├── login.php                  # Student mobile PIN keypad login (paginated 4x2 grid)
+├── student/                   # Student-facing viewport scripts
+│   ├── class_leaderboard.php  # Gamified class ranks list
+│   ├── course.php             # Course subject timeline and navigation grid
+│   ├── dashboard.php          # Home screen displaying XP, streaks, and standalone quizzes
+│   ├── lesson.php             # Active lesson page handling multiple nested quizzes
+│   ├── save_score.php         # Endpoint saving quiz attempt results
+│   ├── student_quiz.php       # Mobile quiz player shell
+│   ├── subjects.php           # Active subject list with progress calculation bars
+│   └── update_progress.php    # Endpoint tracking lesson completion progress
+├── teacher/                   # Teacher-facing viewport scripts
+│   ├── dashboard.php          # Teacher analytics dashboard
+│   ├── curriculum.php         # Curriculum, lessons list, and PDF uploads
+│   ├── quizzes.php            # Interactive multi-type quiz builder interface
+│   ├── review.php             # Contextual student profile dashboard & manual grading subpage
+│   └── roster.php             # Student roster view and central grading hub
+└── teacher_login.php          # Secure teacher authentication page
 ```
 
-## Proposed Database Schema (MySQL)
+---
 
-We will use PDO with prepared statements to run queries. The tables are structured as follows:
+## 3. Implemented Database Schema (MySQL)
+
+All interactions utilize standard PDO prepared statement mappings. Cascaded foreign key constraints are applied across tables to maintain database integrity:
 
 ```sql
--- User accounts table
+-- 1. Table: users
 CREATE TABLE IF NOT EXISTS users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(50) NOT NULL UNIQUE,
-    email VARCHAR(100) NULL UNIQUE,
-    password_hash VARCHAR(255) NULL,
-    pin VARCHAR(4) NULL, -- Used for Student PIN login
+    user_id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(100) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
     role ENUM('student', 'teacher', 'admin') NOT NULL,
+    full_name VARCHAR(100) NOT NULL,
+    class_section VARCHAR(50) NULL,
+    avatar_url VARCHAR(255) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Profiles and gamification metrics
-CREATE TABLE IF NOT EXISTS profiles (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    display_name VARCHAR(100) NOT NULL,
-    avatar_url VARCHAR(255) DEFAULT 'default_avatar.png',
-    grade VARCHAR(20) DEFAULT NULL,
-    class_section VARCHAR(20) DEFAULT NULL,
-    xp INT DEFAULT 0,
-    streak INT DEFAULT 0,
-    last_login_date DATE DEFAULT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- Master list of academic subjects
+-- 2. Table: subjects
 CREATE TABLE IF NOT EXISTS subjects (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    title VARCHAR(100) NOT NULL,
-    description TEXT,
-    icon_name VARCHAR(50) DEFAULT 'book', -- CSS icon descriptor
-    is_approved TINYINT(1) DEFAULT 0,
-    created_by INT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    subject_id INT AUTO_INCREMENT PRIMARY KEY,
+    subject_name VARCHAR(100) NOT NULL UNIQUE,
+    teacher_id INT NULL,
+    icon_url VARCHAR(255) NULL,
+    FOREIGN KEY (teacher_id) REFERENCES users(user_id) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Lessons within subjects
+-- 3. Table: lessons
 CREATE TABLE IF NOT EXISTS lessons (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    lesson_id INT AUTO_INCREMENT PRIMARY KEY,
     subject_id INT NOT NULL,
     title VARCHAR(150) NOT NULL,
-    content_text TEXT,
-    video_url VARCHAR(255) DEFAULT NULL, -- Local or secure URL
+    video_url VARCHAR(255) NULL,
+    worksheet_url VARCHAR(255) NULL,
+    teacher_notes TEXT NULL,
+    order_num INT NOT NULL DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    FOREIGN KEY (subject_id) REFERENCES subjects(subject_id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Quizzes associated with lessons
+-- 4. Table: quizzes
 CREATE TABLE IF NOT EXISTS quizzes (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    lesson_id INT NOT NULL,
-    title VARCHAR(150) NOT NULL,
-    questions_json TEXT NOT NULL, -- JSON structure of quiz questions
-    xp_reward INT DEFAULT 50,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (lesson_id) REFERENCES lessons(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    quiz_id INT AUTO_INCREMENT PRIMARY KEY,
+    lesson_id INT NULL,
+    class_section VARCHAR(50) NULL,
+    quiz_title VARCHAR(150) DEFAULT 'Knowledge Check',
+    total_marks INT NOT NULL DEFAULT 10,
+    questions_json TEXT NOT NULL,
+    FOREIGN KEY (lesson_id) REFERENCES lessons(lesson_id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Quiz attempts by students
-CREATE TABLE IF NOT EXISTS quiz_attempts (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+-- 5. Table: questions
+CREATE TABLE IF NOT EXISTS questions (
+    question_id INT AUTO_INCREMENT PRIMARY KEY,
+    quiz_id INT NOT NULL,
+    question_text TEXT NOT NULL,
+    question_type ENUM('single_choice', 'multiple_choice', 'fill_in_the_blank', 'drag_and_put', 'connecting_the_link') NOT NULL,
+    order_num INT DEFAULT 1,
+    FOREIGN KEY (quiz_id) REFERENCES quizzes(quiz_id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 6. Table: question_options
+CREATE TABLE IF NOT EXISTS question_options (
+    option_id INT AUTO_INCREMENT PRIMARY KEY,
+    question_id INT NOT NULL,
+    option_text TEXT NOT NULL,
+    is_correct TINYINT DEFAULT 0,
+    matching_pair TEXT NULL,
+    category VARCHAR(100) NULL,
+    FOREIGN KEY (question_id) REFERENCES questions(question_id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 7. Table: student_progress
+CREATE TABLE IF NOT EXISTS student_progress (
+    progress_id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT NOT NULL,
+    lesson_id INT NOT NULL,
+    status ENUM('not_started', 'in_progress', 'completed') NOT NULL DEFAULT 'not_started',
+    last_accessed DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES users(user_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (lesson_id) REFERENCES lessons(lesson_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    UNIQUE KEY unique_student_progress (student_id, lesson_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 8. Table: quiz_scores
+CREATE TABLE IF NOT EXISTS quiz_scores (
+    score_id INT AUTO_INCREMENT PRIMARY KEY,
     student_id INT NOT NULL,
     quiz_id INT NOT NULL,
-    score INT NOT NULL,
-    max_score INT NOT NULL,
-    xp_earned INT NOT NULL,
+    marks_earned INT NOT NULL,
     completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (quiz_id) REFERENCES quizzes(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    FOREIGN KEY (student_id) REFERENCES users(user_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (quiz_id) REFERENCES quizzes(quiz_id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Gamification badges available
-CREATE TABLE IF NOT EXISTS badges (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    description VARCHAR(255) NOT NULL,
-    icon_name VARCHAR(50) NOT NULL, -- e.g., 'star', 'fire'
-    xp_required INT DEFAULT 0
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- Badges unlocked by students
-CREATE TABLE IF NOT EXISTS student_badges (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    student_id INT NOT NULL,
-    badge_id INT NOT NULL,
-    unlocked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (badge_id) REFERENCES badges(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_student_badge (student_id, badge_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- Homework files submitted by students
-CREATE TABLE IF NOT EXISTS homework (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    lesson_id INT NOT NULL,
-    student_id INT NOT NULL,
-    file_path VARCHAR(255) NOT NULL,
-    file_name VARCHAR(100) NOT NULL,
-    submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    grade_points INT DEFAULT NULL,
-    feedback TEXT DEFAULT NULL,
-    graded_by INT DEFAULT NULL,
-    FOREIGN KEY (lesson_id) REFERENCES lessons(id) ON DELETE CASCADE,
-    FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (graded_by) REFERENCES users(id) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- Action logs for administrators
-CREATE TABLE IF NOT EXISTS system_logs (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NULL,
-    action VARCHAR(255) NOT NULL,
-    details TEXT NULL,
-    log_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- 9. Table: gamification_stats
+CREATE TABLE IF NOT EXISTS gamification_stats (
+    stat_id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT NOT NULL UNIQUE,
+    total_points INT DEFAULT 0,
+    login_streak INT DEFAULT 0,
+    last_login DATE NULL,
+    FOREIGN KEY (student_id) REFERENCES users(user_id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```
 
-## Verification Plan
+---
 
-### Automated Tests
-- We will execute browser-based checks via the subagent tool to confirm:
-  - Responsive alignment of student portal mobile cards.
-  - Verification of PIN login dial-pad entry.
-  - Live sound generation testing (making sure no web audio issues arise).
-  - Validation of AJAX data reloading during search queries in the teacher portal.
+## 4. Verification Plan
 
-### Manual Verification
-- Testing registration of students, teachers, and admins, ensuring roles are strictly separated.
-- Simulating a student course path: logging in, watching a short mock video file, uploading a dummy PDF homework file, taking an interactive quiz, earning points/badges, and checking the updated profile stats.
-- Logging in as a teacher to review files, approve submissions, add custom bonus points, and view stats.
-- Logging in as an admin to confirm dashboard indicators update correctly.
+### Automated System Checks
+- **Linter Auditing**: Running terminal lint commands on PHP scripts to prevent compile-time syntax failures.
+- **Database Import Test**: Verify the integrity of `database.sql` queries against clean local MySQL database instances.
+
+### Manual Testing Scenarios
+- **Roster & Grading Loop**: Log in as a teacher, click a student name on the class roster, view their progress timeline, and adjust their bonus XP.
+- **Student Engagement Loop**: Log in as a student using the 4x2 paginated avatar PIN keypad. Watch the custom HTML5 video lesson, complete the attached interactive quizzes, and verify that progress records are written in real-time.
+- **Admin Garbage Collection Loop**: Upload a temporary course video, delete the parent lesson, and verify the physical video asset is removed from the directory.
+
+---
+
+## 5. Architectural Pivot Rationale
+
+During the development cycle, several design pivots were executed to improve the performance, reliability, and security of the system:
+
+1. **Migration to Normalized Database Schema**: The system moved from storing questions inside a unstructured JSON column (`quizzes.questions_json`) to a fully normalized database model (`questions` and `question_options` tables). This allows granular student analytics, robust performance, and seamless database-level tracking of complex interactive tasks like Drag & Put and Matching Pairs.
+2. **Simplified Teacher Roster Grading Interface**: Legacy workflows utilizing stand-alone pages for manual searches (`search.php`) and separate grade pages (`grade.php`) were integrated directly into the `roster.php` class list. Clicking a student on the roster now dynamically transitions into a detailed review modal or subpage, eliminating unnecessary menus and dropdown choices.
+3. **Local Storage Ownership**: Video paths and curricular assets are hosted locally inside the `/assets/` directory rather than utilizing external source links. This prevents breaking page states when third-party streaming resources expire and allows the Administrator to enforce storage metric limits using standard file size calculations.
+4. **Pure Audio Synthesizer implementation**: Rather than downloading, serving, and caching static audio assets, sound generation was offloaded entirely to client-side browsers using Web Audio API nodes. This reduces total project package size and ensures immediate compatibility on mobile layouts without browser cross-origin policy blockages.

@@ -2,7 +2,7 @@
 /**
  * roster.php (teacher)
  * Student listing displaying names, classes, progress, and gamification totals.
- * Handles adding new students via modal and secure PDO transactions.
+ * Handles creating new class sections via modal and secure PDO transactions.
  */
 
 require_once __DIR__ . '/../config/db.php';
@@ -16,59 +16,37 @@ $alert_success = $_GET['msg'] ?? "";
 $alert_danger = "";
 
 // -------------------------------------------------------------------------
-// Process Roster Submissions: Add New Student
+// Process Roster Submissions: Create New Class
 // -------------------------------------------------------------------------
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_student'])) {
-    $full_name = trim($_POST['full_name'] ?? '');
-    $username = trim($_POST['username'] ?? '');
-    $pin = trim($_POST['pin'] ?? '');
-    $final_class = trim($_POST['class_section'] ?? '');
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_class'])) {
+    $class_name = trim($_POST['class_name'] ?? '');
 
-    // Choose a random cute default avatar for the student
-    $avatars = ['monkey', 'bunny', 'panda', 'fox'];
-    $avatar_url = $avatars[array_rand($avatars)];
-
-    if (empty($full_name) || empty($username) || empty($pin) || empty($final_class)) {
-        $alert_danger = "All form fields are required!";
-    } elseif (!preg_match('/^\d{4}$/', $pin)) {
-        $alert_danger = "PIN must be exactly 4 digits (e.g. 1234)!";
+    if (empty($class_name)) {
+        $alert_danger = "Class name is required!";
     } else {
         try {
-            $pdo->beginTransaction();
-
-            // Validate that username is unique
-            $check_stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE username = ?");
-            $check_stmt->execute([$username]);
+            // Validate that class doesn't exist yet
+            $check_stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE class_section = ?");
+            $check_stmt->execute([$class_name]);
             if ($check_stmt->fetchColumn() > 0) {
-                throw new Exception("Username '" . htmlspecialchars($username) . "' is already taken!");
+                $alert_danger = "Class '" . htmlspecialchars($class_name) . "' already exists!";
+            } else {
+                // Insert a placeholder student profile to represent this class section
+                $username = 'class_placeholder_' . bin2hex(random_bytes(8));
+                $password_hash = password_hash('0000', PASSWORD_DEFAULT);
+                
+                $insert_placeholder = $pdo->prepare("
+                    INSERT INTO users (username, password_hash, role, full_name, class_section)
+                    VALUES (?, ?, 'student', 'Class Placeholder', ?)
+                ");
+                $insert_placeholder->execute([$username, $password_hash, $class_name]);
+                
+                $alert_success = "New class '{$class_name}' successfully created! 🎉";
+                header("Location: roster.php?msg=" . urlencode($alert_success));
+                exit;
             }
-
-            // Crypt hash the 4-digit PIN using standard Bcrypt algorithm
-            $password_hash = password_hash($pin, PASSWORD_DEFAULT);
-
-            // Insert user profile
-            $insert_user = $pdo->prepare("
-                INSERT INTO users (username, password_hash, role, full_name, class_section, avatar_url)
-                VALUES (?, ?, 'student', ?, ?, ?)
-            ");
-            $insert_user->execute([$username, $password_hash, $full_name, $final_class, $avatar_url]);
-            $student_id = $pdo->lastInsertId();
-
-            // Insert initial empty gamification records to make sure they show on leaderboard instantly
-            $insert_stats = $pdo->prepare("
-                INSERT INTO gamification_stats (student_id, total_points, login_streak, last_login)
-                VALUES (?, 0, 0, NULL)
-            ");
-            $insert_stats->execute([$student_id]);
-
-            $pdo->commit();
-            $alert_success = "New student '{$full_name}' successfully added to class {$final_class}! 🎉";
-
-            header("Location: roster.php?msg=" . urlencode($alert_success));
-            exit;
         } catch (Exception $e) {
-            $pdo->rollBack();
-            $alert_danger = "Failed to add student: " . $e->getMessage();
+            $alert_danger = "Failed to create class: " . $e->getMessage();
         }
     }
 }
@@ -95,7 +73,7 @@ try {
                (SELECT COUNT(*) FROM student_progress WHERE student_id = u.user_id AND status = 'completed') AS completed_count
         FROM users u
         LEFT JOIN gamification_stats gs ON u.user_id = gs.student_id
-        WHERE u.role = 'student'
+        WHERE u.role = 'student' AND u.username NOT LIKE 'class_placeholder_%'
         ORDER BY u.full_name ASC
     ";
     $student_roster = $pdo->query($roster_query)->fetchAll();
@@ -103,7 +81,7 @@ try {
     $alert_danger = "Could not fetch student roster: " . $e->getMessage();
 }
 
-// 3. Fetch unique class sections for the filter dropdown & add student form
+// 3. Fetch unique class sections for the filter dropdown
 $classes_list = [];
 try {
     $classes_list = $pdo->query("
@@ -272,7 +250,6 @@ try {
                     </select>
                 </div>
                 <button type="button" id="btnOpenCreateClass" class="btn-secondary" style="cursor: pointer; padding: 10px 20px; height: auto;">➕ Create New Class</button>
-                <button type="button" onclick="openAddStudentModal()" class="btn-primary" style="cursor: pointer; padding: 10px 20px; height: auto;">➕ Add New Student</button>
             </div>
 
             <!-- Student List Data Table -->
@@ -363,61 +340,6 @@ try {
         </div>
     </div>
 
-    <!-- Modal Dialog: Add New Student -->
-    <div id="add_student_modal" class="modal-overlay">
-        <div class="modal-card">
-            <div
-                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
-                <div class="admin-card-title" style="margin-bottom:0;">Add New Student Profile</div>
-                <button type="button" onclick="closeAddStudentModal()"
-                    style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">❌</button>
-            </div>
-
-            <form method="POST" action="roster.php">
-                <input type="hidden" name="add_student" value="1">
-
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label class="form-label" for="full_name">Full Name</label>
-                    <input type="text" id="full_name" name="full_name" class="form-control"
-                        placeholder="e.g. Timmy Smith" required>
-                </div>
-
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label class="form-label" for="username">Login Username / Handle</label>
-                    <input type="text" id="username" name="username" class="form-control" placeholder="e.g. timmy123"
-                        required style="text-transform: lowercase;">
-                </div>
-
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label class="form-label" for="pin">4-Digit Login PIN</label>
-                    <input type="password" id="pin" name="pin" class="form-control" pattern="\d{4}" maxlength="4"
-                        placeholder="e.g. 1234" required>
-                    <small style="color: var(--text-secondary); display:block; margin-top:5px;">strictly a 4-digit
-                        numeric code.</small>
-                </div>
-
-                <div class="form-group" style="margin-bottom: 25px;">
-                    <label class="form-label" for="classSelect">Class Section</label>
-                    <select name="class_section" id="classSelect" class="form-control" required>
-                        <option value="" disabled selected>-- Select a Class --</option>
-                        <?php foreach ($classes_list as $cls): ?>
-                            <option value="<?php echo htmlspecialchars($cls); ?>"><?php echo htmlspecialchars($cls); ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <div
-                    style="display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid var(--border-color); padding-top: 15px;">
-                    <button type="button" onclick="closeAddStudentModal()" class="btn-sm btn-solid-blue"
-                        style="background-color: var(--text-secondary); padding: 8px 16px;">Cancel</button>
-                    <button type="submit" class="btn-sm btn-solid-blue"
-                        style="background-color: var(--success-color); padding: 8px 16px;">Add Student 🚀</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <!-- Modal Dialog: Create New Class -->
     <div id="createClassModal" class="modal-overlay" style="display: none;">
         <div class="modal-card" style="max-width: 400px;">
@@ -426,28 +348,23 @@ try {
                 <button type="button" onclick="closeCreateClassModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">❌</button>
             </div>
             
-            <div class="form-group" style="margin-bottom: 20px;">
-                <label class="form-label" for="brandNewClassName">Class Name</label>
-                <input type="text" id="brandNewClassName" class="form-control" placeholder="e.g., Standard 2B" required>
-            </div>
-            
-            <div style="display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid var(--border-color); padding-top: 15px;">
-                <button type="button" onclick="closeCreateClassModal()" class="btn-sm btn-solid-blue" style="background-color: var(--text-secondary); padding: 8px 16px;">Cancel</button>
-                <button type="button" id="btnSubmitCreateClass" class="btn-sm btn-solid-blue" style="background-color: var(--primary-light); padding: 8px 16px;">Next ➡️</button>
-            </div>
+            <form method="POST" action="roster.php" id="createClassForm">
+                <input type="hidden" name="create_class" value="1">
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label class="form-label" for="brandNewClassName">Class Name</label>
+                    <input type="text" id="brandNewClassName" name="class_name" class="form-control" placeholder="e.g., Standard 2B" required>
+                </div>
+                
+                <div style="display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid var(--border-color); padding-top: 15px;">
+                    <button type="button" onclick="closeCreateClassModal()" class="btn-sm btn-solid-blue" style="background-color: var(--text-secondary); padding: 8px 16px;">Cancel</button>
+                    <button type="button" id="btnSubmitCreateClass" class="btn-sm btn-solid-blue" style="background-color: var(--primary-light); padding: 8px 16px;">Create Class 🚀</button>
+                </div>
+            </form>
         </div>
     </div>
 
     <!-- Client-side Roster Sorting/Filtering Scripts -->
     <script>
-        function openAddStudentModal() {
-            document.getElementById('add_student_modal').style.display = 'flex';
-        }
-
-        function closeAddStudentModal() {
-            document.getElementById('add_student_modal').style.display = 'none';
-        }
-
         function openCreateClassModal() {
             document.getElementById('createClassModal').style.display = 'flex';
             document.getElementById('brandNewClassName').value = '';
@@ -479,33 +396,7 @@ try {
                         alert("Please enter a valid class name.");
                         return;
                     }
-
-                    const classSelect = document.getElementById('classSelect');
-
-                    // Check if class already exists in the select dropdown options
-                    let exists = false;
-                    for (let i = 0; i < classSelect.options.length; i++) {
-                        if (classSelect.options[i].value === className) {
-                            exists = true;
-                            classSelect.selectedIndex = i;
-                            break;
-                        }
-                    }
-
-                    if (!exists) {
-                        // Programmatically create and append new option
-                        const newOpt = document.createElement('option');
-                        newOpt.value = className;
-                        newOpt.textContent = className;
-                        classSelect.appendChild(newOpt);
-                        classSelect.value = className;
-                    }
-
-                    // Close create class modal
-                    closeCreateClassModal();
-
-                    // Open add student modal
-                    openAddStudentModal();
+                    document.getElementById('createClassForm').submit();
                 });
             }
 
@@ -533,10 +424,6 @@ try {
 
             // Close modal when clicking outside the card boundary
             window.addEventListener('click', (e) => {
-                const modal = document.getElementById('add_student_modal');
-                if (e.target === modal) {
-                    closeAddStudentModal();
-                }
                 const cModal = document.getElementById('createClassModal');
                 if (e.target === cModal) {
                     closeCreateClassModal();

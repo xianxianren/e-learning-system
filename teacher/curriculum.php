@@ -26,6 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $subject_id = filter_input(INPUT_POST, 'subject_id', FILTER_VALIDATE_INT);
         $title = filter_input(INPUT_POST, 'title', FILTER_DEFAULT);
         $order_num = filter_input(INPUT_POST, 'order_num', FILTER_VALIDATE_INT);
+        $teacher_notes = filter_input(INPUT_POST, 'teacher_notes', FILTER_DEFAULT);
 
         $title = trim($title);
 
@@ -99,15 +100,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             if (empty($alert_danger)) {
                 try {
                     $stmt = $pdo->prepare("
-                        INSERT INTO lessons (subject_id, title, video_url, worksheet_url, order_num) 
-                        VALUES (?, ?, ?, ?, ?)
+                        INSERT INTO lessons (subject_id, title, video_url, worksheet_url, order_num, teacher_notes) 
+                        VALUES (?, ?, ?, ?, ?, ?)
                     ");
                     $stmt->execute([
                         $subject_id,
                         $title,
                         $video_url,
                         $worksheet_path,
-                        $order_num
+                        $order_num,
+                        $teacher_notes
                     ]);
 
                     // Retrieve newly created lesson ID to create a blank quiz for it!
@@ -129,6 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     } elseif ($_POST['action'] === 'edit_lesson') {
         $lesson_id = filter_input(INPUT_POST, 'lesson_id', FILTER_VALIDATE_INT);
         $title = filter_input(INPUT_POST, 'title', FILTER_DEFAULT);
+        $teacher_notes = filter_input(INPUT_POST, 'teacher_notes', FILTER_DEFAULT);
         $title = trim($title);
 
         if (!$lesson_id || empty($title)) {
@@ -177,11 +180,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
                 if (empty($alert_danger)) {
                     if ($has_new_video) {
-                        $stmt = $pdo->prepare("UPDATE lessons SET title = ?, video_url = ? WHERE lesson_id = ?");
-                        $stmt->execute([$title, $new_video_url, $lesson_id]);
+                        $stmt = $pdo->prepare("UPDATE lessons SET title = ?, video_url = ?, teacher_notes = ? WHERE lesson_id = ?");
+                        $stmt->execute([$title, $new_video_url, $teacher_notes, $lesson_id]);
                     } else {
-                        $stmt = $pdo->prepare("UPDATE lessons SET title = ? WHERE lesson_id = ?");
-                        $stmt->execute([$title, $lesson_id]);
+                        $stmt = $pdo->prepare("UPDATE lessons SET title = ?, teacher_notes = ? WHERE lesson_id = ?");
+                        $stmt->execute([$title, $teacher_notes, $lesson_id]);
                     }
                     $alert_success = "Lesson updated successfully! 🎉";
                 }
@@ -299,6 +302,18 @@ try {
         .modal-close:hover {
             color: #333;
         }
+
+        /* Empty State Styling */
+        .empty-state {
+            background-color: #f8fafc;
+            border: 2px dashed #cbd5e1;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            color: #64748b;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 
@@ -359,71 +374,73 @@ try {
                     <div class="admin-card">
                         <div class="admin-card-title">Subject & Lesson Roadmaps</div>
 
-                        <?php if (empty($lessons)): ?>
-                            <p style="color: var(--text-secondary);">No lessons created yet. Use the builder on the right to
-                                start!</p>
+                        <?php if (empty($subjects)): ?>
+                            <p style="color: var(--text-secondary);">No subjects created yet.</p>
                         <?php else: ?>
                             <?php
-                            // Group lessons by subject locally
-                            $grouped_lessons = [];
-                            foreach ($lessons as $l) {
-                                $grouped_lessons[$l['subject_name']][] = $l;
-                            }
-
-                            foreach ($grouped_lessons as $subject_name => $subj_lessons):
+                            foreach ($subjects as $subj):
+                                $subject_name = $subj['subject_name'];
+                                $subj_lessons = array_filter($lessons, function($l) use ($subj) {
+                                    return $l['subject_id'] == $subj['subject_id'];
+                                });
                                 ?>
                                 <h3
                                     style="margin: 15px 0 10px 0; color: var(--primary-color); border-bottom: 2px solid var(--border-color); padding-bottom: 5px;">
                                     📚 <?php echo htmlspecialchars($subject_name); ?>
                                 </h3>
-                                <div class="table-responsive" style="margin-bottom: 20px;">
-                                    <table class="data-table">
-                                        <thead>
-                                            <tr>
-                                                <th style="width: 80px;">Seq</th>
-                                                <th>Lesson Title</th>
-                                                <th>Video URL</th>
-                                                <th>Worksheet</th>
-                                                <th style="width: 140px;">Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php foreach ($subj_lessons as $l): ?>
+                                
+                                <?php if (empty($subj_lessons)): ?>
+                                    <div class="empty-state">No lessons created yet. Click "Add New Lesson" to begin!</div>
+                                <?php else: ?>
+                                    <div class="table-responsive" style="margin-bottom: 20px;">
+                                        <table class="data-table">
+                                            <thead>
                                                 <tr>
-                                                    <td><strong>#<?php echo $l['order_num']; ?></strong></td>
-                                                    <td><strong><?php echo htmlspecialchars($l['title']); ?></strong></td>
-                                                    <td>
-                                                        <span
-                                                            style="font-size: 0.8rem; color: var(--text-secondary); max-width: 150px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                                            <?php echo htmlspecialchars($l['video_url'] ?: 'No Video'); ?>
-                                                        </span>
-                                                    </td>
-                                                    <td>
-                                                        <?php if ($l['worksheet_url']): ?>
-                                                            <a href="../<?php echo htmlspecialchars($l['worksheet_url']); ?>"
-                                                                class="btn-sm" target="_blank"
-                                                                style="padding: 2px 8px; font-size: 0.75rem;">
-                                                                View PDF
-                                                            </a>
-                                                        <?php else: ?>
-                                                            <span style="font-size: 0.8rem; color: var(--text-muted);">None</span>
-                                                        <?php endif; ?>
-                                                    </td>
-                                                    <td>
-                                                        <div style="display: flex; gap: 5px; align-items: center;">
-                                                            <button type="button" class="btn-edit"
-                                                                onclick="openEditLessonModal(<?php echo $l['lesson_id']; ?>, '<?php echo htmlspecialchars(addslashes($l['title'])); ?>')">✏️
-                                                                Edit</button>
-                                                            <button type="button" class="btn-delete"
-                                                                onclick="confirmDeleteLesson(<?php echo $l['lesson_id']; ?>)">🗑️
-                                                                Delete</button>
-                                                        </div>
-                                                    </td>
+                                                    <th style="width: 80px;">Seq</th>
+                                                    <th>Lesson Title</th>
+                                                    <th>Video URL</th>
+                                                    <th>Worksheet</th>
+                                                    <th style="width: 140px;">Actions</th>
                                                 </tr>
-                                            <?php endforeach; ?>
-                                        </tbody>
-                                    </table>
-                                </div>
+                                            </thead>
+                                            <tbody>
+                                                <?php foreach ($subj_lessons as $l): ?>
+                                                    <tr>
+                                                        <td><strong>#<?php echo $l['order_num']; ?></strong></td>
+                                                        <td><strong><?php echo htmlspecialchars($l['title']); ?></strong></td>
+                                                        <td>
+                                                            <span
+                                                                style="font-size: 0.8rem; color: var(--text-secondary); max-width: 150px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                                                <?php echo htmlspecialchars($l['video_url'] ?: 'No Video'); ?>
+                                                            </span>
+                                                        </td>
+                                                        <td>
+                                                            <?php if ($l['worksheet_url']): ?>
+                                                                <a href="../<?php echo htmlspecialchars($l['worksheet_url']); ?>"
+                                                                    class="btn-sm" target="_blank"
+                                                                    style="padding: 2px 8px; font-size: 0.75rem;">
+                                                                    View PDF
+                                                                </a>
+                                                            <?php else: ?>
+                                                                <span style="font-size: 0.8rem; color: var(--text-muted);">None</span>
+                                                            <?php endif; ?>
+                                                        </td>
+                                                        <td>
+                                                            <div style="display: flex; gap: 5px; align-items: center;">
+                                                                <button type="button" class="btn-edit"
+                                                                    onclick='openEditLessonModal(<?php echo $l['lesson_id']; ?>, <?php echo htmlspecialchars(json_encode($l['title']), ENT_QUOTES); ?>, <?php echo htmlspecialchars(json_encode($l['teacher_notes'] ?? ''), ENT_QUOTES); ?>)'>✏️
+                                                                    Edit</button>
+                                                                <button type="button" class="btn-delete"
+                                                                    onclick="confirmDeleteLesson(<?php echo $l['lesson_id']; ?>)">🗑️
+                                                                    Delete</button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                <?php endif; ?>
                             <?php endforeach; ?>
                         <?php endif; ?>
                     </div>
@@ -466,6 +483,11 @@ try {
                             <small
                                 style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; display: block;">Max
                                 file size: 50MB. Allowed formats: MP4, WebM.</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Teacher's Notes 📝 (Optional):</label>
+                            <textarea name="teacher_notes" class="form-control" rows="4" placeholder="Enter instructions, homework details, or encouraging words here..."></textarea>
                         </div>
 
                         <div class="form-group">
@@ -516,6 +538,11 @@ try {
                         file size: 50MB. Allowed formats: MP4, WebM.</small>
                 </div>
 
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label class="form-label" for="edit_notes" style="display: block; font-weight: bold; margin-bottom: 5px;">Teacher's Notes 📝 (Optional):</label>
+                    <textarea id="edit_notes" name="teacher_notes" class="form-control" rows="4" style="width: 100%;" placeholder="Enter instructions, homework details, or encouraging words here..."></textarea>
+                </div>
+
                 <button type="submit" class="form-control btn-solid-blue"
                     style="font-weight: 700; cursor: pointer; height: 42px; width: 100%;">
                     Update Lesson Details 💾
@@ -531,9 +558,10 @@ try {
             }
         }
 
-        function openEditLessonModal(lessonId, currentTitle) {
+        function openEditLessonModal(lessonId, currentTitle, currentNotes) {
             document.getElementById('edit_lesson_id').value = lessonId;
             document.getElementById('edit_title').value = currentTitle;
+            document.getElementById('edit_notes').value = currentNotes || '';
             document.getElementById('editLessonModal').style.display = 'flex';
         }
 

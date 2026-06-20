@@ -28,7 +28,7 @@ erDiagram
     users ||--o{ quiz_scores : earns
     users ||--o| gamification_stats : accumulates
     subjects ||--o{ lessons : contains
-    lessons ||--o| quizzes : evaluates
+    lessons ||--o{ quizzes : evaluates
     lessons ||--o{ student_progress : associates
     quizzes ||--o{ quiz_scores : scores
     quizzes ||--o{ questions : contains
@@ -47,6 +47,8 @@ Holds accounts for students, teachers, and system administrators.
 * `class_section` (VARCHAR(50), NULL) - Target school cohort.
 * `avatar_url` (VARCHAR(255), NULL) - Character avatar name (e.g. 'monkey', 'bunny').
 * `created_at` (TIMESTAMP)
+* > [!NOTE]
+  > Teachers do not have permission to register new student accounts; this transaction is strictly restricted to the System Administrator (`admin/manage_users.php`) to ensure proper class assignment and security auditing.
 
 #### 2. `subjects`
 Topic areas created by admins.
@@ -60,8 +62,9 @@ Worksheet and video files associated with a parent subject.
 * `lesson_id` (INT, PK, AUTO_INCREMENT)
 * `subject_id` (INT, FK) - Links to `subjects.subject_id` (ON DELETE CASCADE).
 * `title` (VARCHAR(150))
-* `video_url` (VARCHAR(255), NULL) - Path to video file.
-* `worksheet_url` (VARCHAR(255), NULL) - Path to downloadable PDF.
+* `video_url` (VARCHAR(255), NULL) - Local server path to MP4 asset (e.g., `assets/videos/sample.mp4`), preventing reliance on third-party streams.
+* `worksheet_url` (VARCHAR(255), NULL) - Local path to downloadable PDF.
+* `teacher_notes` (TEXT, NULL) - Direct notes, homework instructions, or context written by teachers for the student view.
 * `order_num` (INT, DEFAULT 1) - Grid ordering sequence.
 * `created_at` (TIMESTAMP)
 
@@ -74,9 +77,11 @@ Logs student curriculum completion statuses.
 * `last_accessed` (DATETIME)
 
 #### 5. `quizzes`
-Evaluation configurations linked to lessons.
+Evaluation configurations.
 * `quiz_id` (INT, PK, AUTO_INCREMENT)
-* `lesson_id` (INT, UNIQUE, FK) - Links to `lessons.lesson_id` (ON DELETE CASCADE).
+* `lesson_id` (INT, NULL, FK) - Links to `lessons.lesson_id` (ON DELETE CASCADE). Changed to nullable to support 1-to-many relationship mapping and standalone classroom quizzes.
+* `class_section` (VARCHAR(50), NULL) - Associated cohort, added for standalone class assessments.
+* `quiz_title` (VARCHAR(150), DEFAULT 'Knowledge Check') - Custom user-facing title.
 * `total_marks` (INT, DEFAULT 10)
 * `questions_json` (TEXT) - Fallback serialized JSON representation of questions for student app compatibility.
 
@@ -95,7 +100,7 @@ Relational database storage of options, correct answers, and categories.
 * `option_text` (TEXT)
 * `is_correct` (TINYINT, DEFAULT 0) - Used for choices, correct blanks, or matching left elements.
 * `matching_pair` (TEXT, NULL) - Links matched right elements.
-* `category` (VARCHAR(100), NULL) - Holds categorization buckets for Drag & Put.
+* `category` (VARCHAR(100), NULL) - Holds categorization buckets to support 1-to-Many Drag & Put touch interfaces.
 
 #### 8. `quiz_scores`
 Records marks earned by students.
@@ -120,10 +125,10 @@ Tracks active points totals and streak calculations.
 ```
 e-learning system/
 ├── admin/
-│   ├── dashboard.php            # Main administrative panel
+│   ├── dashboard.php            # Main administrative panel (with storage calculations)
 │   ├── manage_curriculum.php    # Topic editor & subject manager
-│   ├── manage_users.php        # User accounts database panel
-│   └── system_reports.php      # SQL logs and diagnostics
+│   ├── manage_users.php         # Admin-only user creation and roster database panel
+│   └── system_reports.php       # SQL logs and diagnostics
 ├── admin_login.php              # Secure login portal for admins
 ├── assets/
 │   ├── css/
@@ -138,13 +143,13 @@ e-learning system/
 │   └── logout.php               # Destroys session
 ├── config/
 │   └── db.php                   # PDO Database wrapper configuration
-├── database.sql                 # SQL schema dump and initial seeds
+├── database.sql                 # Unified schema dump and complete seeding configurations
 ├── implementation_plan.md       # High-level architecture roadmap
 ├── import_db.php                # Database importer utility
 ├── includes/
 │   └── auth.php                 # Authentication helper checks
 ├── index.php                    # System landing page
-├── login.php                    # Mobile avatar PIN keypad login page
+├── login.php                    # Mobile avatar PIN keypad login page (paginated)
 ├── student/
 │   ├── class_leaderboard.php    # Gamified class leaderboard ranks
 │   ├── course.php               # Course lesson timeline path
@@ -158,8 +163,8 @@ e-learning system/
 │   ├── curriculum.php           # Curriculum, lessons list, and PDF uploads
 │   ├── dashboard.php            # Teacher overview metrics
 │   ├── quizzes.php              # Advanced Quiz Builder interface
-│   ├── review.php               # Grading tables and manual XP awards
-│   └── roster.php               # Class rosters with "Add Student" modal
+│   ├── review.php               # Roster reviews, grading, and manual XP award workflow
+│   └── roster.php               # Class rosters (with dynamic leaderboard tables)
 └── teacher_login.php            # Secure login portal for teachers
 ```
 
@@ -168,26 +173,23 @@ e-learning system/
 ## 4. Current Implementation Status
 
 ### Front-End Interfaces
-* **Student Mobile UI:** Wrapped inside a central container (`max-width: 480px`) with a vibrant, playful styling theme. Responsive subject selection grid, custom progress indicators, custom-rounded video controls (play, pause, rewind buttons scaled to 64px), and class leaderboard.
-* **Teacher Web Dashboard:** Professional desktop layout featuring KPI metrics cards, dynamic roster filters, and a visual layout for the curriculum manager. Equipped with the **Advanced Quiz Builder** interface and **Add Student** transaction form modal.
-* **Admin Web Dashboard:** Large-screen administrative panel displaying system-wide usage counts, active database table logs, and diagnostic utility forms.
+* **Student Mobile UI:** Playful bubble layout constrained to `max-width: 480px`. Contains a **4x2 paginated avatar selector** (8 cards per page with `<` and `>` controls toggled using CSS visibility variables) on the login page to optimize layout space.
+* **Teacher Web Dashboard:** Features curriculum management, lesson notes review, and student assessment metrics. Integrates a **dynamic Class Leaderboard** directly inside the roster list and handles manual grading adjustments via a contextual **"Grade & Award XP" subpage workflow** in `teacher/review.php`.
+* **Admin Web Dashboard:** Administrative hub presenting database statistics, usage grids, and a storage calculation widget display.
 
 ### Vanilla JS Logic
-* **PIN Keypad Authenticator:** Collects keystrokes from numeric buttons, manages circular dot animations, checks for completed PIN lengths, and posts responses.
-* **Web Audio Sound Synthesizer:** Real-time generation of gamification alerts (success chimes and error buzzers) using pure browser `AudioContext` nodes. No audio file downloads required.
-* **Background APIs Syncing:** AJAX fetch requests handle background updates to `update_progress.php` when video lessons complete, and post quiz scores to `save_score.php`.
-* **Advanced Quiz Builder:** Fully functional builder supporting 5 question types. Dynamically injects specialized inputs into cards depending on chosen dropdown types.
-* **Interactive Quiz Player Engine (`quiz_engine.js`):** Unified pointer events dragging, touch-friendly radio/checkbox clicks, iOS-zoom safe blanks, and line matching pairing systems.
+* **Web Audio Sound Synthesizer:** Real-time generation of gamification alerts (success chimes and error buzzers) using pure browser `AudioContext` nodes. No external audio files are downloaded or cached.
+* **Client-side Avatar Pagination:** Standardizes navigation on the PIN entry screen, dynamically hiding/revealing button elements using `.style.visibility = 'hidden' | 'visible'` to avoid layout reflow shifts.
+* **Interactive Quiz Player Engine (`quiz_engine.js`):** Supports 5 custom question types, including complex **1-to-Many drop zone arrays** for classification sorting (Drag & Put) and interactive line-drawing matching (Connecting the Link).
 
 ### PHP/MySQL Back-End Integration
-* **Session Manager & Auth Hooks:** Standard authentication utility checks user credentials (bcrypt verification) and redirects requests depending on user roles.
-* **Curriculum Manager APIs:** Implements secure server-side form upload logic, verifying PDF attachments, resizing assets, and saving files.
-* **Advanced Quiz Builder API:** Runs complete database transactions: inserts records, retrieves new keys, clear old relational indexes, seeds relational tables, and compiles standard JSON schemas to synchronize student views.
-* **Leaderboard Queries:** Joined `users` and `gamification_stats` class leaderboard filtering query.
+* **File Upload & Clean Up:** Processes worksheets and video files using standard secure multipart handlers (`move_uploaded_file`). Features an automated **garbage collector system calling `unlink()`** when a lesson or subject is deleted, cleaning up orphaned PDFs and MP4s from the assets folder.
+* **Admin Storage Metrics Helper:** Implements a recursive directory calculator (`getFolderSize`) checking the `/assets/` workspace directory size in bytes, calculating real-time usage percentages relative to the **500MB server limit**.
 
 ---
 
 ## 5. Next Immediate Action Items
 
-1. **System Walkthrough & Refinements:** Validate student grading feedback pathways.
-2. **Database Cohort Extension:** Explore system administration features for managing classes.
+1. **Final UI/UX cross-browser testing:** Verify touch interaction behavior on iOS and Android viewports.
+2. **Import `seed_data.sql` for presentation:** Setup the staging server with populated classrooms.
+3. **Package system for final academic submission:** Create zip files and archive directories.
