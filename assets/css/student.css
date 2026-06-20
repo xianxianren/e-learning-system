@@ -1,0 +1,860 @@
+/**
+ * student.css
+ * Bubbly, highly visual, responsive style sheet designed for primary school students.
+ * Utilizes vibrant color schemas, massive buttons, and soft shadow card structures.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap');
+
+:root {
+    --bg-color: #f7f9fc;
+    --card-color: #ffffff;
+    --text-color: #2b3e50;
+    --text-muted: #8fa0b5;
+
+    /* Playful Palette */
+    --color-primary: #ff5757;
+    /* Bubbly Red */
+    --color-secondary: #ffb830;
+    /* Bright Yellow */
+    --color-success: #3ec770;
+    /* Playful Green */
+    --color-blue: #3a86ff;
+    /* Sky Blue */
+    --color-purple: #8338ec;
+    /* Magic Purple */
+
+    --shadow-main: 0 8px 0px rgba(0, 0, 0, 0.06);
+    --shadow-button-primary: 0 5px 0px #d43b3b;
+    --shadow-button-success: 0 5px 0px #2a9b51;
+    --shadow-button-secondary: 0 5px 0px #d89617;
+    --shadow-button-blue: 0 5px 0px #1d5fc6;
+
+    --font-fun: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
+    --radius-large: 24px;
+    --radius-medium: 16px;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    font-family: var(--font-fun);
+    background: radial-gradient(circle, #fbc2eb 0%, #a6c1ee 100%);
+    color: var(--text-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+}
+
+.app-container {
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    background-color: var(--bg-color);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    position: relative;
+    padding-bottom: 100px;
+    /* space for bigger bottom nav */
+    overflow-x: hidden;
+}
+
+/* =========================================================================
+   Typography & Headers
+   ========================================================================= */
+h1,
+h2,
+h3,
+h4 {
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.text-center {
+    text-align: center;
+}
+
+/* =========================================================================
+   Universal Bubbly Elements
+   ========================================================================= */
+.card {
+    background-color: var(--card-color);
+    border-radius: var(--radius-large);
+    border: 3px solid #e2ebf5;
+    padding: 20px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05), 0 4px 6px rgba(0, 0, 0, 0.03);
+    width: 100%;
+    margin-bottom: 20px;
+    transition: transform 0.2s ease;
+}
+
+.btn {
+    font-family: var(--font-fun);
+    font-weight: 800;
+    font-size: 1.1rem;
+    padding: 12px 24px;
+    border: none;
+    border-radius: var(--radius-medium);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+    text-decoration: none;
+    min-height: 48px;
+    min-width: 48px;
+}
+
+.btn-primary {
+    background-color: var(--color-primary);
+    color: white;
+    box-shadow: var(--shadow-button-primary);
+}
+
+.btn-primary:active {
+    transform: translateY(4px);
+    box-shadow: 0 1px 0px #d43b3b;
+}
+
+.btn-success {
+    background-color: var(--color-success);
+    color: white;
+    box-shadow: var(--shadow-button-success);
+}
+
+.btn-success:active {
+    transform: translateY(4px);
+    box-shadow: 0 1px 0px #2a9b51;
+}
+
+.btn-success:disabled {
+    background-color: #bdc3c7;
+    box-shadow: 0 5px 0px #95a5a6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-secondary {
+    background-color: var(--color-secondary);
+    color: white;
+    box-shadow: var(--shadow-button-secondary);
+}
+
+.btn-secondary:active {
+    transform: translateY(4px);
+    box-shadow: 0 1px 0px #d89617;
+}
+
+.btn-blue {
+    background-color: var(--color-blue);
+    color: white;
+    box-shadow: var(--shadow-button-blue);
+}
+
+.btn-blue:active {
+    transform: translateY(4px);
+    box-shadow: 0 1px 0px #1d5fc6;
+}
+
+/* =========================================================================
+   1. Splash & Login Screen
+   ========================================================================= */
+.login-container {
+    max-width: 450px;
+    width: 90%;
+    margin: 40px auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.animated-logo {
+    font-size: 3rem;
+    font-weight: 800;
+    color: var(--color-primary);
+    text-shadow: 3px 3px 0 #fff, 6px 6px 0 var(--color-secondary);
+    animation: gentle-bounce 2s infinite ease-in-out;
+    margin-bottom: 20px;
+}
+
+@keyframes gentle-bounce {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.avatar-selector {
+    display: flex;
+    overflow-x: auto;
+    width: 100%;
+    padding: 10px 0;
+    gap: 15px;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    /* Hide scrollbars */
+}
+
+.avatar-selector::-webkit-scrollbar {
+    display: none;
+}
+
+.avatar-card {
+    flex: 0 0 90px;
+    height: 95px;
+    border-radius: var(--radius-medium);
+    border: 3px solid #e2ebf5;
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+    scroll-snap-align: center;
+    font-size: 2.2rem;
+}
+
+.avatar-card.selected {
+    border-color: var(--color-blue);
+    transform: scale(1.1);
+    box-shadow: 0 4px 10px rgba(58, 134, 255, 0.3);
+}
+
+.avatar-card span {
+    font-size: 0.9rem;
+    font-weight: 800;
+    margin-top: 5px;
+    color: var(--text-color);
+}
+
+.pin-display {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin: 25px 0;
+}
+
+.pin-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 3px solid #cbd6e2;
+    background-color: white;
+    transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.pin-dot.filled {
+    background-color: var(--color-purple);
+    border-color: var(--color-purple);
+    transform: scale(1.2);
+}
+
+.keypad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    width: 100%;
+    max-width: 320px;
+    margin-top: 10px;
+}
+
+.keypad-btn {
+    background-color: white;
+    border: 3px solid #e2ebf5;
+    border-radius: var(--radius-medium);
+    font-size: 1.6rem;
+    font-weight: 800;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 0px #cbd6e2;
+    transition: transform 0.05s ease, box-shadow 0.05s ease;
+    color: var(--text-color);
+}
+
+.keypad-btn:active {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0px #cbd6e2;
+}
+
+.keypad-btn.action-btn {
+    background-color: #cbd6e2;
+    font-size: 1.1rem;
+}
+
+/* =========================================================================
+   2. Main Dashboard & General Layout
+   ========================================================================= */
+.student-header {
+    width: 100%;
+    max-width: 500px;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.student-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.student-avatar-small {
+    font-size: 2.2rem;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 2px solid #e2ebf5;
+    background-color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.student-name {
+    font-size: 1.2rem;
+    font-weight: 800;
+}
+
+.xp-badge {
+    background-color: var(--color-secondary);
+    color: var(--text-color);
+    padding: 6px 14px;
+    border-radius: var(--radius-large);
+    font-weight: 800;
+    border: 2px solid #fff;
+    box-shadow: 0 4px 0px #d89617;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.container-mobile {
+    width: 100%;
+    padding: 0 20px;
+    margin: 10px auto;
+}
+
+.progress-bar-container {
+    background-color: #e2ebf5;
+    height: 32px;
+    /* Doubled thickness */
+    border-radius: 16px;
+    overflow: hidden;
+    margin: 12px 0;
+    position: relative;
+    border: 2px solid #e2ebf5;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    border-radius: 8px;
+    transition: width 0.4s ease;
+}
+
+/* Learning Streak Component */
+.streak-row {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 12px;
+}
+
+.streak-day {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: var(--text-muted);
+}
+
+.streak-star {
+    font-size: 1.6rem;
+    filter: grayscale(1);
+    transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+.streak-day.active .streak-star {
+    filter: none;
+    transform: scale(1.1);
+    animation: star-pulse 1s infinite alternate;
+}
+
+.streak-day.active {
+    color: var(--color-secondary);
+}
+
+@keyframes star-pulse {
+    0% {
+        transform: scale(1.1);
+        filter: drop-shadow(0 0 2px rgba(255, 184, 48, 0.5));
+    }
+
+    100% {
+        transform: scale(1.2);
+        filter: drop-shadow(0 0 8px rgba(255, 184, 48, 0.8));
+    }
+}
+
+/* Primary Action Card */
+.continue-card {
+    background: linear-gradient(135deg, var(--color-purple), var(--color-blue));
+    color: white;
+    border: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.continue-card::before {
+    content: '';
+    position: absolute;
+    top: -50px;
+    right: -50px;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.continue-card h3 {
+    margin-bottom: 5px;
+}
+
+.continue-card p {
+    font-size: 0.95rem;
+    opacity: 0.9;
+    margin-bottom: 15px;
+}
+
+/* Sticky Bottom Navigation */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 480px;
+    /* Constrained to match app-container */
+    height: 90px;
+    /* Taller for larger text and icons */
+    background-color: white;
+    border-top: 3px solid #e2ebf5;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 100;
+    box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.06);
+}
+
+.bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: var(--text-muted);
+    font-weight: 800;
+    font-size: 1.15rem;
+    /* Increased size by > 50% */
+}
+
+.bottom-nav-item.active {
+    color: var(--color-primary);
+    /* Highlighted with bright primary bubbly red color */
+}
+
+.bottom-nav-icon {
+    font-size: 2.25rem;
+    /* Increased size by 50% */
+    margin-bottom: 2px;
+}
+
+/* =========================================================================
+   3. Subject Selection Grid
+   ========================================================================= */
+.subjects-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    width: 100%;
+}
+
+.subject-card {
+    background-color: white;
+    border-radius: var(--radius-large);
+    border: 3px solid #e2ebf5;
+    padding: 12px;
+    text-align: center;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05), 0 4px 6px rgba(0, 0, 0, 0.03);
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    aspect-ratio: 1 / 1.1;
+    max-height: 200px;
+    box-sizing: border-box;
+    overflow: hidden;
+    position: relative;
+}
+
+.subject-card:active {
+    transform: scale(0.97);
+}
+
+.subject-icon {
+    font-size: 3.5rem;
+    /* Reduced size to ensure spacing */
+    margin: 5px 0;
+    max-height: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.subject-title {
+    font-size: 0.95rem;
+    /* slightly smaller font size */
+    font-weight: 800;
+    color: var(--text-color);
+    text-align: center;
+    word-wrap: break-word;
+    width: 100%;
+}
+
+.subject-progress-wrapper {
+    position: absolute;
+    bottom: 10px;
+    width: 80%;
+    /* Anchored to bottom, width 80% */
+    left: 10%;
+}
+
+.subject-progress-wrapper .progress-bar-container {
+    height: 16px;
+    /* neat spacing, fits beautifully */
+    border-radius: 8px;
+    margin: 0;
+}
+
+.progress-percentage-label {
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-align: right;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+/* =========================================================================
+   4. Active Lesson Screen
+   ========================================================================= */
+.lesson-video-container {
+    position: relative;
+    width: 100%;
+    border-radius: 15px;
+    /* Radius 15px */
+    overflow: hidden;
+    border: 3px solid #e2ebf5;
+    background-color: black;
+    aspect-ratio: 16/9;
+    margin-bottom: 12px;
+    /* comfort space below video */
+}
+
+.lesson-video {
+    width: 100%;
+    height: 100%;
+    display: block;
+    border-radius: 12px;
+}
+
+/* Custom Player Controls */
+.video-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    /* neatly grouped */
+    margin: 12px 0 20px 0;
+    /* sit comfortably in white space */
+}
+
+.ctrl-btn {
+    width: 64px;
+    /* Strict, equal dimensions */
+    height: 64px;
+    border-radius: 50%;
+    /* Force circular shape */
+    border: none;
+    background-color: white;
+    border: 3px solid #e2ebf5;
+    box-shadow: 0 4px 0px #cbd6e2;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    /* Stacks rewind icon above '10s' text */
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    /* Proportionate icon size to fit inside 64x64px space */
+    line-height: 1.1;
+    color: var(--text-color);
+    transition: transform 0.05s ease, box-shadow 0.05s ease;
+    overflow: hidden;
+    /* Content protection */
+    box-sizing: border-box;
+    /* Content protection */
+}
+
+.ctrl-btn:active {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0px #cbd6e2;
+}
+
+.rewind-label {
+    font-size: 12px;
+    /* Small enough to fit cleanly without touching edges */
+    font-weight: 800;
+    margin-top: 1px;
+    line-height: 1;
+}
+
+.lesson-content {
+    background-color: white;
+    border-radius: var(--radius-large);
+    border: 3px solid #e2ebf5;
+    padding: 20px;
+    box-shadow: var(--shadow-main);
+    margin-top: 15px;
+    /* comfortable margin above notes card */
+    margin-bottom: 25px;
+}
+
+/* =========================================================================
+   5. Interactive Quiz Modal Overlay
+   ========================================================================= */
+.quiz-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(43, 62, 80, 0.95);
+    z-index: 1000;
+    display: none;
+    /* Controlled by JS */
+    align-items: center;
+    justify-content: center;
+}
+
+.quiz-container {
+    width: 90%;
+    max-width: 450px;
+    background-color: white;
+    border-radius: var(--radius-large);
+    border: 4px solid var(--color-purple);
+    padding: 25px;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+.quiz-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.quiz-title {
+    color: var(--color-purple);
+    font-weight: 800;
+    font-size: 1.3rem;
+}
+
+.quiz-close {
+    font-size: 1.5rem;
+    cursor: pointer;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+}
+
+.quiz-question-box {
+    margin: 20px 0;
+    font-size: 1.2rem;
+    font-weight: 800;
+    line-height: 1.4;
+    color: var(--text-color);
+}
+
+.quiz-options {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.option-btn {
+    background-color: white;
+    border: 3px solid #e2ebf5;
+    border-radius: var(--radius-medium);
+    padding: 15px;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--text-color);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    box-shadow: 0 4px 0px #e2ebf5;
+    text-align: center;
+}
+
+.option-btn:active {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0px #e2ebf5;
+}
+
+/* Quiz Visual Feedback states */
+.option-btn.correct {
+    background-color: var(--color-success);
+    color: white;
+    border-color: #2a9b51;
+    box-shadow: 0 4px 0px #2a9b51;
+}
+
+.option-btn.wrong {
+    background-color: var(--color-primary);
+    color: white;
+    border-color: #d43b3b;
+    box-shadow: 0 4px 0px #d43b3b;
+}
+
+.quiz-feedback {
+    min-height: 30px;
+    font-size: 1.1rem;
+    font-weight: 800;
+    margin: 15px 0;
+}
+
+.feedback-correct {
+    color: var(--color-success);
+    animation: text-pop 0.3s ease;
+}
+
+.feedback-wrong {
+    color: var(--color-primary);
+    animation: text-shake 0.3s ease;
+}
+
+@keyframes text-pop {
+    0% {
+        transform: scale(0.8);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes text-shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-5px);
+    }
+
+    75% {
+        transform: translateX(5px);
+    }
+}
+
+/* Success Reward Modal */
+.reward-modal {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+}
+
+.reward-icon {
+    font-size: 4.5rem;
+    margin-bottom: 15px;
+    animation: trophy-bounce 1s infinite alternate;
+}
+
+@keyframes trophy-bounce {
+    0% {
+        transform: translateY(0) rotate(-5deg);
+    }
+
+    100% {
+        transform: translateY(-12px) rotate(5deg);
+    }
+}
+
+/* Custom CSS Icons/Emoji Mapping */
+.icon-math::before {
+    content: '➕';
+}
+
+.icon-science::before {
+    content: '🔬';
+}
+
+.icon-english::before {
+    content: '📚';
+}
+
+.icon-streak::before {
+    content: '🔥';
+}
+
+.icon-points::before {
+    content: '⭐';
+}
+
+.icon-avatar-monkey::before {
+    content: '🐵';
+}
+
+.icon-avatar-bunny::before {
+    content: '🐰';
+}
+
+.icon-avatar-panda::before {
+    content: '🐼';
+}
+
+.icon-avatar-fox::before {
+    content: '🦊';
+}
