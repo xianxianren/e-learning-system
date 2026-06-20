@@ -179,9 +179,9 @@ PLAIN-TEXT CREDENTIALS FOR TESTING:
 -- Seed Users (Bcrypt hash of 'password123' / PIN '1234')
 -- -------------------------------------------------------------------------
 INSERT INTO users (user_id, username, password_hash, role, full_name, class_section, avatar_url) VALUES
-(1, 'admin@school.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 'Admin Alice', NULL, NULL),
-(2, 'cikgu.aminah@school.edu', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'teacher', 'Cikgu Aminah', NULL, NULL),
-(3, 'mr.tan@school.edu', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'teacher', 'Mr. Tan', NULL, NULL),
+(1, 'admin@school.com', '$2y$10$doTjD/zWpnm2VCANhGMeVeETZyw1I1zzJlSWVDinvp5xqlHPgyzX2', 'admin', 'Admin Alice', NULL, NULL),
+(2, 'cikgu.aminah@school.edu', '$2y$10$doTjD/zWpnm2VCANhGMeVeETZyw1I1zzJlSWVDinvp5xqlHPgyzX2', 'teacher', 'Cikgu Aminah', NULL, NULL),
+(3, 'mr.tan@school.edu', '$2y$10$doTjD/zWpnm2VCANhGMeVeETZyw1I1zzJlSWVDinvp5xqlHPgyzX2', 'teacher', 'Mr. Tan', NULL, NULL),
 (4, 'ahmad', '$2y$10$qgEFoXPP.PPToiCRW9E4De5K6VSY.HeyQAPZWgHTd4DS/Bj/MrUR6', 'student', 'Ahmad Bin Yusof', 'Tahun 1 Mawar', 'monkey'),
 (5, 'mei_ling', '$2y$10$qgEFoXPP.PPToiCRW9E4De5K6VSY.HeyQAPZWgHTd4DS/Bj/MrUR6', 'student', 'Mei Ling Tan', 'Tahun 1 Mawar', 'bunny'),
 (6, 'muthu', '$2y$10$qgEFoXPP.PPToiCRW9E4De5K6VSY.HeyQAPZWgHTd4DS/Bj/MrUR6', 'student', 'Muthu Arumugam', 'Tahun 2 Melati', 'panda'),
