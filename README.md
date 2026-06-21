@@ -39,16 +39,9 @@ The platform bridges the gap between engaging mobile-first student learning and 
 
 ## 💻 Installation & Setup Guide
 
-**CRITICAL: PHP Server Configuration**
-Because this system supports local video file uploads, you must modify your local server configuration before testing.
-
-1. Open your `php.ini` file (via XAMPP, MAMP, or standard server config).
-2. Locate and update the following values to support large video files:
-   ```ini
-   upload_max_filesize = 100M
-   post_max_size = 100M
-   ```
-3. Save the `php.ini` file and restart your Apache server.
+1. Install the project files from GitHub.
+2. Unzip it and move the folder to the `htdocs` directory under XAMPP, and rename the folder (e.g., to `e-learning system`).
+3. Open your XAMPP Control Panel and start **MySQL** and **Apache**.
 4. Import the unified database script `database.sql` into your MySQL server:
    - Either run the automated web utility: `http://localhost/e-learning system/import_db.php`
    - Or run `mysql -u root < database.sql` (or use the phpMyAdmin Import tab).
